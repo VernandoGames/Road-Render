@@ -1,0 +1,9 @@
+/target
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
+*.png
+*.svg
+*.d.json
+*.DS_Store
