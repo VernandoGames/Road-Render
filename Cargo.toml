@@ -1,6 +1,6 @@
 [package]
 name = "road_render"
-version = "1.0.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["Ashton Miller"]
 description = "Advanced tooling to render roblox files in seconds."
