@@ -55,7 +55,7 @@ jobs:
     name: Build (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     env:
-      BIN: rojo
+      BIN: road_render
     steps:
       - uses: actions/checkout@v3
         with:
