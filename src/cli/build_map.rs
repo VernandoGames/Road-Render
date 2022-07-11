@@ -1,14 +1,11 @@
 use std::collections::VecDeque;
-use std::fs::{self, copy, File};
-use std::io::{stdout, BufReader};
+use std::fs::{self, File};
+use std::io::BufReader;
 // use std::thread;
 // use std::t&ime::Duration;
-use draw::{render, Canvas, Color, Drawing, Shape, Style, SvgRenderer};
-use image::{DynamicImage, ImageBuffer, Rgb, RgbImage};
 use rbx_dom_weak::WeakDom;
 use rbx_types::{Matrix3, Ref, Variant, Vector3};
 use std::path::{Path, PathBuf};
-use std::string;
 
 use serde::Deserialize;
 // use indicatif::{ProgressBar, ProgressStyle};
@@ -92,10 +89,8 @@ impl BuildMapCommand {
                 println!("Root instances in file:");
                 let root = dom.root();
 
-                let mut img: RgbImage = ImageBuffer::new(self.width as u32, self.height as u32);
-
                 let mut pixmap = Pixmap::new(self.width as u32, self.height as u32).unwrap();
-                if config_data.draw_everything == true {
+                if config_data.draw_everything {
                     // draw everything :)
                     let workspace = root
                         .children()
@@ -131,11 +126,12 @@ impl BuildMapCommand {
                                 Vector3::new(cf.position.x, cf.position.y, cf.position.z); //cf.position + Vector3::new(0f32, 0f32, 5000f32);
                             let object_orientation = cf.orientation;
 
-                            let mut color: Vec<u8> = Vec::new();
-                            color.push(object_color.r);
-                            color.push(object_color.g);
-                            color.push(object_color.b);
-                            color.push(((1f32 - object_transparency) * 255f32).round() as u8);
+                            let color: Vec<u8> = vec![
+                                object_color.r,
+                                object_color.g,
+                                object_color.b,
+                                ((1f32 - object_transparency) * 255f32).round() as u8,
+                            ];
 
                             //let mut c: [u8; 3] = [object_color.r, object_color.g, object_color.b];
 
@@ -167,7 +163,7 @@ impl BuildMapCommand {
                                 .children()
                                 .iter()
                                 .find(|&&x| dom.get_by_ref(x).unwrap().name == *cur_path)
-                                .expect(format!("Unable to find instance {}", cur_path).as_str());
+                                .unwrap_or_else(|| panic!("Unable to find instance {}", cur_path));
                             inst = dom.get_by_ref(*inst_ref).unwrap();
                         }
                         let descendants = get_descendants(&dom, inst_ref)?;
@@ -281,7 +277,6 @@ impl BuildMapCommand {
 
                 println!("Saving..");
                 pixmap.save_png("output.png").unwrap();
-                img.save("test.png").unwrap();
 
                 println!("Success.");
                 // for &referent in dom.root().children() {
@@ -323,54 +318,48 @@ fn detect_file_kind(output: &Path) -> Option<OutputKind> {
     }
 }
 
-fn draw_part_to_imgbuf_experimental(
-    imgbuf: &mut RgbImage,
-    pos: Vector3,
-    size: Vector3,
-    rot: Matrix3,
-    color: &[u8; 3],
-) {
-    let aa = math_lib::axis_angle_conversion::matrix3_to_axis_angle(rot);
-    let t = aa.y;
-    // 1 1
-    let r1_x = size.x * 0.5f32 * t.cos() - size.z * 0.5f32 * t.sin() + pos.x;
-    let r1_z = size.x * 0.5f32 * t.sin() + size.z * 0.5f32 * t.cos() + pos.z;
-    // -1 1
-    let r2_x = -size.x * 0.5f32 * t.cos() - size.z * 0.5f32 * t.sin() + pos.x;
-    let r2_z = -size.x * 0.5f32 * t.sin() + size.z * 0.5f32 * t.cos() + pos.z;
-    // 1 -1
-    let r3_x = -size.x * 0.5f32 * t.cos() + size.z * 0.5f32 * t.sin() + pos.x;
-    let r3_z = -size.x * 0.5f32 * t.sin() - size.z * 0.5f32 * t.cos() + pos.z;
-    // -1 -1
-    let r4_x = size.x * 0.5f32 * t.cos() + size.z * 0.5f32 * t.sin() + pos.x;
-    let r4_z = size.x * 0.5f32 * t.sin() - size.z * 0.5f32 * t.cos() + pos.z;
+// fn draw_part_to_imgbuf_experimental(
+//     imgbuf: &mut RgbImage,
+//     pos: Vector3,
+//     size: Vector3,
+//     rot: Matrix3,
+//     color: &[u8; 3],
+// ) {
+//     let aa = math_lib::axis_angle_conversion::matrix3_to_axis_angle(rot);
+//     let t = aa.y;
+//     // 1 1
+//     let r1_x = size.x * 0.5f32 * t.cos() - size.z * 0.5f32 * t.sin() + pos.x;
+//     let r1_z = size.x * 0.5f32 * t.sin() + size.z * 0.5f32 * t.cos() + pos.z;
+//     // -1 1
+//     let r2_x = -size.x * 0.5f32 * t.cos() - size.z * 0.5f32 * t.sin() + pos.x;
+//     let r2_z = -size.x * 0.5f32 * t.sin() + size.z * 0.5f32 * t.cos() + pos.z;
+//     // 1 -1
+//     let r3_x = -size.x * 0.5f32 * t.cos() + size.z * 0.5f32 * t.sin() + pos.x;
+//     let r3_z = -size.x * 0.5f32 * t.sin() - size.z * 0.5f32 * t.cos() + pos.z;
+//     // -1 -1
+//     let r4_x = size.x * 0.5f32 * t.cos() + size.z * 0.5f32 * t.sin() + pos.x;
+//     let r4_z = size.x * 0.5f32 * t.sin() - size.z * 0.5f32 * t.cos() + pos.z;
 
-    imgbuf.get_pixel_mut(r1_x as u32, r1_z as u32).0 = *color;
-    imgbuf.get_pixel_mut(r2_x as u32, r2_z as u32).0 = *color;
-    imgbuf.get_pixel_mut(r3_x as u32, r3_z as u32).0 = *color;
-    imgbuf.get_pixel_mut(r4_x as u32, r4_z as u32).0 = *color;
+//     imgbuf.get_pixel_mut(r1_x as u32, r1_z as u32).0 = *color;
+//     imgbuf.get_pixel_mut(r2_x as u32, r2_z as u32).0 = *color;
+//     imgbuf.get_pixel_mut(r3_x as u32, r3_z as u32).0 = *color;
+//     imgbuf.get_pixel_mut(r4_x as u32, r4_z as u32).0 = *color;
 
-    let filler_scale = 2u32;
+//     let filler_scale = 2u32;
 
-    let img_size_x = (r3_x - r1_x).round() as u32 * filler_scale;
-    let img_size_z = (r3_z - r1_z).round() as u32 * filler_scale;
-    for x_s in 0u32..img_size_x {
-        let x = lerp(r1_x, r3_x, (x_s / img_size_x) as f32) as u32;
-        for z_s in 0u32..img_size_z {
-            let z = lerp(r1_z, r3_z, (z_s / img_size_z) as f32) as u32;
-            imgbuf.get_pixel_mut(x, z).0 = *color;
-        }
-    }
-}
+//     let img_size_x = (r3_x - r1_x).round() as u32 * filler_scale;
+//     let img_size_z = (r3_z - r1_z).round() as u32 * filler_scale;
+//     for x_s in 0u32..img_size_x {
+//         let x = lerp(r1_x, r3_x, (x_s / img_size_x) as f32) as u32;
+//         for z_s in 0u32..img_size_z {
+//             let z = lerp(r1_z, r3_z, (z_s / img_size_z) as f32) as u32;
+//             imgbuf.get_pixel_mut(x, z).0 = *color;
+//         }
+//     }
+// }
 
 // actual rendering code
-fn draw_part_on_pixmap(
-    map: &mut Pixmap,
-    pos: Vector3,
-    size: Vector3,
-    rot: Matrix3,
-    color: &Vec<u8>,
-) {
+fn draw_part_on_pixmap(map: &mut Pixmap, pos: Vector3, size: Vector3, rot: Matrix3, color: &[u8]) {
     let aa = math_lib::axis_angle_conversion::matrix3_to_axis_angle(rot);
     let t = aa.y;
     // 1 1
@@ -416,7 +405,7 @@ fn get_descendants(dom: &WeakDom, inst_ref: &Ref) -> anyhow::Result<Vec<Ref>> {
         .expect("received invalid child in tree when recursing through descendants");
 
     let mut descendants: Vec<Ref> = Vec::new();
-    let mut stack = VecDeque::from_iter(instance.children().into_iter());
+    let mut stack = VecDeque::from_iter(instance.children().iter());
 
     while let Some(current) = stack.pop_front() {
         descendants.push(*current);
@@ -433,6 +422,6 @@ fn get_descendants(dom: &WeakDom, inst_ref: &Ref) -> anyhow::Result<Vec<Ref>> {
     Ok(descendants)
 }
 
-fn lerp(a: f32, b: f32, t: f32) -> f32 {
-    a + (b - a) * t
-}
+// fn lerp(a: f32, b: f32, t: f32) -> f32 {
+//     a + (b - a) * t
+// }

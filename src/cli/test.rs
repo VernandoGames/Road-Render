@@ -16,9 +16,9 @@ pub struct TestCommand {
 impl TestCommand {
     pub fn run(self) -> anyhow::Result<()> {
         let matrix = Matrix3::new(
-            Vector3::new(0.707106769f32, 0f32, 0.707106769f32),
+            Vector3::new(0.70710677f32, 0f32, 0.70710677f32),
             Vector3::new(0f32, 1f32, 0f32),
-            Vector3::new(-0.707106769f32, 0f32, 0.707106769f32),
+            Vector3::new(-0.70710677f32, 0f32, 0.70710677f32),
         );
         let aa = axis_angle_conversion::matrix3_to_axis_angle(matrix);
         println!("{:?}", aa);

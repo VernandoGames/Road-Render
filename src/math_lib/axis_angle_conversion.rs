@@ -9,7 +9,7 @@ pub struct AxisAngle {
 
 impl AxisAngle {
     pub fn new(x: f32, y: f32, z: f32) -> AxisAngle {
-        AxisAngle { x: x, y: y, z: z }
+        AxisAngle { x, y, z }
     }
 }
 
@@ -63,15 +63,11 @@ pub fn matrix3_to_axis_angle(m: Matrix3) -> AxisAngle {
     }
     // bring this quaternion to aa
     let m = (x * x + y * y + z * z).sqrt();
-    let a: f32;
-    if w < 0f32 {
-        a = -2f32 * m.atan2(-w) / m;
+    let a: f32 = if w < 0f32 {
+        -2f32 * m.atan2(-w) / m
     } else {
-        a = 2f32 * m.atan2(w) / m;
-    }
-    if a != a {
-        return AxisAngle::new(0f32, 0f32, 0f32);
-    }
+        2f32 * m.atan2(w) / m
+    };
 
-    return AxisAngle::new(a * x, a * y, a * z);
+    AxisAngle::new(a * x, a * y, a * z)
 }
