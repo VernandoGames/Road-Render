@@ -1234,7 +1234,7 @@ dependencies = [
 
 [[package]]
 name = "road_render"
-version = "0.2.1"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "backtrace",
