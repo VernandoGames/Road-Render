@@ -375,28 +375,30 @@ fn draw_part_on_pixmap(map: &mut Pixmap, pos: Vector3, size: Vector3, rot: Matri
     let r4_x = size.x * 0.5f32 * t.cos() + size.z * 0.5f32 * t.sin() + pos.x;
     let r4_z = size.x * 0.5f32 * t.sin() - size.z * 0.5f32 * t.cos() + pos.z;
 
-    let path = {
-        let mut pb = PathBuilder::new();
-        pb.move_to(r1_x, r1_z);
-        pb.line_to(r2_x, r2_z);
-        pb.line_to(r3_x, r3_z);
-        pb.line_to(r4_x, r4_z);
-        //pb.line_to(r1_x, r1_z);
-        pb.close();
-        pb.finish().unwrap()
-    };
+    let mut pb = PathBuilder::new();
+    pb.move_to(r1_x, r1_z);
+    pb.line_to(r2_x, r2_z);
+    pb.line_to(r3_x, r3_z);
+    pb.line_to(r4_x, r4_z);
+    //pb.line_to(r1_x, r1_z);
+    pb.close();
+    //pb.finish().unwrap()
+    let obj = pb.finish();
+    if obj.is_some() {
+        let path = obj.unwrap();
 
-    let mut paint = Paint::default();
-    paint.set_color_rgba8(color[0], color[1], color[2], color[3]);
-    paint.anti_alias = true;
-
-    map.fill_path(
-        &path,
-        &paint,
-        tiny_skia::FillRule::Winding,
-        Transform::identity(),
-        None,
-    );
+        let mut paint = Paint::default();
+        paint.set_color_rgba8(color[0], color[1], color[2], color[3]);
+        paint.anti_alias = true;
+    
+        map.fill_path(
+            &path,
+            &paint,
+            tiny_skia::FillRule::Winding,
+            Transform::identity(),
+            None,
+        );
+    }
 }
 
 fn get_descendants(dom: &WeakDom, inst_ref: &Ref) -> anyhow::Result<Vec<Ref>> {
