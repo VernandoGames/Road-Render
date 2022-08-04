@@ -384,13 +384,11 @@ fn draw_part_on_pixmap(map: &mut Pixmap, pos: Vector3, size: Vector3, rot: Matri
     pb.close();
     //pb.finish().unwrap()
     let obj = pb.finish();
-    if obj.is_some() {
-        let path = obj.unwrap();
-
+    if let Some(path) = obj {
         let mut paint = Paint::default();
         paint.set_color_rgba8(color[0], color[1], color[2], color[3]);
         paint.anti_alias = true;
-    
+
         map.fill_path(
             &path,
             &paint,
